@@ -64,11 +64,12 @@ def ID_srch(ID):
 def optchange(items,prices):
     menu = A_N1["menu"]
     menu.delete(0, "end")
+    varA1.set('')
+    A_li1=items
     for string in items:
-        menu.add_command(label=string)
-        cleaned=re.sub('<br>*','',string)
-        print('BEFORE',string)
-        print('AFTER',cleaned)
+        cleaned=re.sub('<br>.*','',string)
+        menu.add_command(label=cleaned, command=tk._setit(varA1, cleaned))
+
 
 def Dataprocess():
     df['健保碼'][0]=enID_1.get()
@@ -148,11 +149,11 @@ enNAME_4.grid(column=1,row=4)
 enNAME_5.grid(column=1,row=5)
 
 #A廠項目欄位======================================
-A_li1=['','','']
-A_li2=['','','']
-A_li3=['','','']
-A_li4=['','','']
-A_li5=['','','']
+A_li1=['']
+A_li2=['']
+A_li3=['']
+A_li4=['']
+A_li5=['']
 
 varA1=tk.StringVar(win)
 varA2=tk.StringVar(win)
