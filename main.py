@@ -6,6 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import re
 
+
 df=pd.DataFrame({'健保碼':['','','','',''],'名稱':['','','','',''],'A廠品項':['','','','',''],'A品項價格':['','','','',''],'E廠品項':['','','','',''],'E品項價格':['','','','',''],'業務1價':['','','','',''],'業務2價':['','','','',''],'業務3價':['','','','','']})
 
 #登入A、E網站============================================
@@ -37,6 +38,7 @@ time.sleep(1)
 driver.find_element_by_xpath('//*[@id="primptmsg"]/div/div[1]/form/ul/li[1]/span/input').send_keys('fkg20131101')
 driver.find_element_by_xpath('/html/body/header/div[2]/div/div/div[1]/form/ul/li[2]/span/input').send_keys('fkg9988')
 driver.find_element_by_id('urlogin_a').click()
+time.sleep(3)
 driver.find_element_by_class_name('order').click()
 
 def ID_srch(ID,row):#row:0-4
@@ -56,14 +58,27 @@ def ID_srch(ID,row):#row:0-4
     for i in range(1,len(A_item)):
         items.append(A_item[i].get_attribute('innerHTML'))
         prices.append(A_price[i].get_attribute('innerHTML'))
-    optchange(items,prices,row)
+    A_optchange(items,prices,row)
+
+    items=[]
+    prices=[]
     driver.switch_to_window('tab2')
     srch = driver.find_element_by_xpath('//*[@id="orderForm"]/ul/li[2]/span/input')
     srch.send_keys(ID)
     srch_btn = driver.find_element_by_xpath('//*[@id="orderForm"]/ul/li[4]/a')
     srch_btn.click()
+    time.sleep(2)
+    E_item=driver.find_elements_by_css_selector('.item .name a')
+    E_price=driver.find_elements_by_css_selector('.item .sell_price span')
+    print('line73',i,E_item[0].get_attribute('innerHTML'),E_price[0].get_attribute('innerHTML'))
+    i=0
+    for i in range(0,len(E_item)):
+        items.append(E_item[i].get_attribute('innerHTML'))
+        prices.append(E_price[i].get_attribute('innerHTML'))
+        print('line78',items,prices)
+    E_optchange(items,prices,row)
 
-def optchange(items,prices,row):
+def A_optchange(items,prices,row):
     if row==0:
         menu = A_N1["menu"]
         menu.delete(0, "end")
@@ -112,6 +127,56 @@ def optchange(items,prices,row):
             A_li5.append(cleaned)
             varA5.set(A_li5[0])
             menu.add_command(label=cleaned, command=tk._setit(varA5, cleaned))
+
+def E_optchange(items,prices,row):
+    if row==0:
+        menu = E_N1["menu"]
+        menu.delete(0, "end")
+        E_li1=[]
+        for string in items:
+            cleaned=re.sub('<br>.*','',string)
+            E_li1.append(cleaned)
+            varE1.set(E_li1[0])
+            menu.add_command(label=cleaned, command=tk._setit(varE1, cleaned))
+    elif row==1:
+        menu = E_N2["menu"]
+        menu.delete(0, "end")
+        E_li2=[]
+        for string in items:
+            cleaned=re.sub('<br>.*','',string)
+            E_li2.append(cleaned)
+            varE2.set(E_li2[0])
+            menu.add_command(label=cleaned, command=tk._setit(varE2, cleaned))
+
+    elif row==2:
+        menu = E_N3["menu"]
+        menu.delete(0, "end")
+        E_li3=[]
+        for string in items:
+            cleaned=re.sub('<br>.*','',string)
+            E_li3.append(cleaned)
+            varE3.set(E_li3[0])
+            menu.add_command(label=cleaned, command=tk._setit(varE3, cleaned))
+
+    elif row==3:
+        menu = E_N4["menu"]
+        menu.delete(0, "end")
+        E_li4=[]
+        for string in items:
+            cleaned=re.sub('<br>.*','',string)
+            E_li4.append(cleaned)
+            varE4.set(E_li4[0])
+            menu.add_command(label=cleaned, command=tk._setit(varE4, cleaned))
+
+    elif row==4:
+        menu = E_N5["menu"]
+        menu.delete(0, "end")
+        E_li5=[]
+        for string in items:
+            cleaned=re.sub('<br>.*','',string)
+            E_li5.append(cleaned)
+            varE5.set(E_li5[0])
+            menu.add_command(label=cleaned, command=tk._setit(varE5, cleaned))
 
 def Dataprocess():
     df['健保碼'][0]=enID_1.get()
@@ -189,7 +254,7 @@ enNAME_4.grid(column=1,row=4)
 enNAME_5.grid(column=1,row=5)
 
 #A廠項目欄位======================================
-A_li1=['品項一','品項二']
+A_li1=['']
 A_li2=['']
 A_li3=['']
 A_li4=['']
@@ -220,12 +285,32 @@ A_P3=tk.Label(win,text='20').grid(column=3,row=3)
 A_P4=tk.Label(win,text='20').grid(column=3,row=4)
 A_P5=tk.Label(win,text='20').grid(column=3,row=5)
 
-E_N1=tk.OptionMenu(win,varA1,*A_li1).grid(column=4,row=1)
-E_N2=tk.OptionMenu(win,varA1,*A_li1).grid(column=4,row=2)
-E_N3=tk.OptionMenu(win,varA1,*A_li1).grid(column=4,row=3)
-E_N4=tk.OptionMenu(win,varA1,*A_li1).grid(column=4,row=4)
-E_N5=tk.OptionMenu(win,varA1,*A_li1).grid(column=4,row=5)
+#E廠項目欄位============================================
+E_li1=['']
+E_li2=['']
+E_li3=['']
+E_li4=['']
+E_li5=['']
 
+varE1=tk.StringVar(win)
+varE2=tk.StringVar(win)
+varE3=tk.StringVar(win)
+varE4=tk.StringVar(win)
+varE5=tk.StringVar(win)
+
+E_N1=tk.OptionMenu(win,varE1,*E_li1)
+E_N2=tk.OptionMenu(win,varE2,*E_li2)
+E_N3=tk.OptionMenu(win,varE3,*E_li3)
+E_N4=tk.OptionMenu(win,varE4,*E_li4)
+E_N5=tk.OptionMenu(win,varE5,*E_li5)
+
+E_N1.grid(column=4,row=1)
+E_N2.grid(column=4,row=2)
+E_N3.grid(column=4,row=3)
+E_N4.grid(column=4,row=4)
+E_N5.grid(column=4,row=5)
+
+#E廠項目價格欄位
 E_P1=tk.Label(win,text='20').grid(column=5,row=1)
 E_P2=tk.Label(win,text='20').grid(column=5,row=2)
 E_P3=tk.Label(win,text='20').grid(column=5,row=3)
