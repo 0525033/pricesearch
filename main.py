@@ -39,7 +39,8 @@ driver.find_element_by_xpath('/html/body/header/div[2]/div/div/div[1]/form/ul/li
 driver.find_element_by_id('urlogin_a').click()
 driver.find_element_by_class_name('order').click()
 
-def ID_srch(ID):
+def ID_srch(ID,row):#row:0-4
+    #切換到A廠===========================================
     driver.switch_to.window(handles[0])
     srch = driver.find_element_by_id('cphContent_ucCT_txtKeyword')
     srch.send_keys(ID)
@@ -49,27 +50,68 @@ def ID_srch(ID):
     srch.clear()
     A_item=driver.find_elements_by_xpath('//*[@id="cphContent_ucCT_gv"]/tbody/tr/td[4]')
     A_price=driver.find_elements_by_xpath('//*[@id="cphContent_ucCT_gv"]/tbody/tr/td[6]')
-    A_li1=[]
-    A_Pli1=[]
+    #初始化項目陣列
+    items=[]
+    prices=[]
     for i in range(1,len(A_item)):
-        A_li1.append(A_item[i].get_attribute('innerHTML'))
-        A_Pli1.append(A_price[i].get_attribute('innerHTML'))
-    optchange(A_li1,A_Pli1)
+        items.append(A_item[i].get_attribute('innerHTML'))
+        prices.append(A_price[i].get_attribute('innerHTML'))
+    optchange(items,prices,row)
     driver.switch_to_window('tab2')
     srch = driver.find_element_by_xpath('//*[@id="orderForm"]/ul/li[2]/span/input')
     srch.send_keys(ID)
     srch_btn = driver.find_element_by_xpath('//*[@id="orderForm"]/ul/li[4]/a')
     srch_btn.click()
 
-def optchange(items,prices):
-    menu = A_N1["menu"]
-    menu.delete(0, "end")
-    varA1.set('')
-    A_li1=items
-    for string in items:
-        cleaned=re.sub('<br>.*','',string)
-        menu.add_command(label=cleaned, command=tk._setit(varA1, cleaned))
+def optchange(items,prices,row):
+    if row==0:
+        menu = A_N1["menu"]
+        menu.delete(0, "end")
+        A_li1=[]
+        for string in items:
+            cleaned=re.sub('<br>.*','',string)
+            A_li1.append(cleaned)
+            varA1.set(A_li1[0])
+            menu.add_command(label=cleaned, command=tk._setit(varA1, cleaned))
+    elif row==1:
+        menu = A_N2["menu"]
+        menu.delete(0, "end")
+        A_li2=[]
+        for string in items:
+            cleaned=re.sub('<br>.*','',string)
+            A_li2.append(cleaned)
+            varA2.set(A_li2[0])
+            menu.add_command(label=cleaned, command=tk._setit(varA2, cleaned))
 
+    elif row==2:
+        menu = A_N3["menu"]
+        menu.delete(0, "end")
+        A_li3=[]
+        for string in items:
+            cleaned=re.sub('<br>.*','',string)
+            A_li3.append(cleaned)
+            varA3.set(A_li3[0])
+            menu.add_command(label=cleaned, command=tk._setit(varA3, cleaned))
+
+    elif row==3:
+        menu = A_N4["menu"]
+        menu.delete(0, "end")
+        A_li4=[]
+        for string in items:
+            cleaned=re.sub('<br>.*','',string)
+            A_li4.append(cleaned)
+            varA4.set(A_li4[0])
+            menu.add_command(label=cleaned, command=tk._setit(varA4, cleaned))
+
+    elif row==4:
+        menu = A_N5["menu"]
+        menu.delete(0, "end")
+        A_li5=[]
+        for string in items:
+            cleaned=re.sub('<br>.*','',string)
+            A_li5.append(cleaned)
+            varA5.set(A_li5[0])
+            menu.add_command(label=cleaned, command=tk._setit(varA5, cleaned))
 
 def Dataprocess():
     df['健保碼'][0]=enID_1.get()
@@ -86,12 +128,10 @@ def Dataprocess():
 
     for i in range(0,5):#0-4
         if df['健保碼'][i]!='':
-            ID_srch(df['健保碼'][i])
-            df['A廠品項'][i]='ID搜尋'
-            df['A品項價格'][i]='ID搜尋'
-            df['E廠品項'][i]='ID搜尋'
-            df['E品項價格'][i]='ID搜尋'
+            print('line127',i)
+            ID_srch(df['健保碼'][i],i)
         elif df['名稱'][i]!='':
+            print('line129',i)
             df['A廠品項'][i]='名稱搜尋'
             df['A品項價格'][i]='名稱搜尋'
             df['E廠品項'][i]='名稱搜尋'
@@ -149,7 +189,7 @@ enNAME_4.grid(column=1,row=4)
 enNAME_5.grid(column=1,row=5)
 
 #A廠項目欄位======================================
-A_li1=['']
+A_li1=['品項一','品項二']
 A_li2=['']
 A_li3=['']
 A_li4=['']
@@ -160,12 +200,6 @@ varA2=tk.StringVar(win)
 varA3=tk.StringVar(win)
 varA4=tk.StringVar(win)
 varA5=tk.StringVar(win)
-
-varA1.set(A_li1[0])
-varA2.set(A_li2[0])
-varA3.set(A_li3[0])
-varA4.set(A_li4[0])
-varA5.set(A_li5[0])
 
 A_N1=tk.OptionMenu(win,varA1,*A_li1)
 A_N2=tk.OptionMenu(win,varA2,*A_li2)
