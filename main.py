@@ -6,7 +6,6 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import re
 
-
 df=pd.DataFrame({'健保碼':['','','','',''],'名稱':['','','','',''],'A廠品項':['','','','',''],'A品項價格':['','','','',''],'E廠品項':['','','','',''],'E品項價格':['','','','',''],'業務1價':['','','','',''],'業務2價':['','','','',''],'業務3價':['','','','','']})
 
 #登入A、E網站============================================
@@ -62,6 +61,7 @@ def ID_srch(ID,row):#row:0-4
 
     items=[]
     prices=[]
+    #切換到E廠=============================================
     driver.switch_to_window('tab2')
     srch = driver.find_element_by_xpath('//*[@id="orderForm"]/ul/li[2]/span/input')
     srch.send_keys(ID)
@@ -70,24 +70,26 @@ def ID_srch(ID,row):#row:0-4
     time.sleep(2)
     E_item=driver.find_elements_by_css_selector('.item .name a')
     E_price=driver.find_elements_by_css_selector('.item .sell_price span')
-    print('line73',i,E_item[0].get_attribute('innerHTML'),E_price[0].get_attribute('innerHTML'))
     i=0
     for i in range(0,len(E_item)):
         items.append(E_item[i].get_attribute('innerHTML'))
         prices.append(E_price[i].get_attribute('innerHTML'))
-        print('line78',items,prices)
     E_optchange(items,prices,row)
 
 def A_optchange(items,prices,row):
     if row==0:
         menu = A_N1["menu"]
         menu.delete(0, "end")
+        global A_dict
+        A_dict={}
         A_li1=[]
         for string in items:
             cleaned=re.sub('<br>.*','',string)
             A_li1.append(cleaned)
             varA1.set(A_li1[0])
             menu.add_command(label=cleaned, command=tk._setit(varA1, cleaned))
+        for i in range(0,len(A_li1)):
+            A_dict[A_li1[i]]=prices[i]
     elif row==1:
         menu = A_N2["menu"]
         menu.delete(0, "end")
@@ -193,7 +195,6 @@ def Dataprocess():
 
     for i in range(0,5):#0-4
         if df['健保碼'][i]!='':
-            print('line127',i)
             ID_srch(df['健保碼'][i],i)
         elif df['名稱'][i]!='':
             print('line129',i)
@@ -204,6 +205,11 @@ def Dataprocess():
         else:
             continue
     print(df)
+
+def optchanged(*args):
+    print('line209',varA1.get())
+    print(A_dict)
+
 
 #生成視窗元件==================================
 win=tk.Tk()
@@ -265,6 +271,8 @@ varA2=tk.StringVar(win)
 varA3=tk.StringVar(win)
 varA4=tk.StringVar(win)
 varA5=tk.StringVar(win)
+
+varA1.trace('w',optchanged)
 
 A_N1=tk.OptionMenu(win,varA1,*A_li1)
 A_N2=tk.OptionMenu(win,varA2,*A_li2)
