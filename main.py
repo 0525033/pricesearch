@@ -42,6 +42,7 @@ driver.find_element_by_id('urlogin_a').click()
 time.sleep(1.5)
 driver.find_element_by_class_name('order').click()
 
+#以ID搜尋========================================================
 def ID_srch(ID,row):#row:0-4
     #切換到A廠==================================================
     driver.switch_to.window(handles[0])
@@ -60,7 +61,9 @@ def ID_srch(ID,row):#row:0-4
     if len(A_item)>1:
         for i in range(1,len(A_item)):
             items.append(A_item[i].get_attribute('innerHTML'))
-            prices.append(A_price[i].get_attribute('innerHTML'))
+            price=A_price[i].get_attribute('innerHTML')
+            price=re.sub('\.00','',price)
+            prices.append(price)
         A_optchange(items,prices,row)
     i=0
     items=[]
@@ -69,6 +72,47 @@ def ID_srch(ID,row):#row:0-4
     driver.switch_to_window('tab2')
     srch = driver.find_element_by_xpath('//*[@id="orderForm"]/ul/li[2]/span/input')
     srch.send_keys(ID)
+    srch_btn = driver.find_element_by_xpath('//*[@id="orderForm"]/ul/li[4]/a')
+    srch_btn.click()
+    time.sleep(0.5)
+    E_item=driver.find_elements_by_css_selector('.item .name a')
+    E_price=driver.find_elements_by_css_selector('.item .sell_price span')
+    if len(E_item)>0:
+        for i in range(0,len(E_item)):
+            items.append(E_item[i].get_attribute('innerHTML'))
+            prices.append(E_price[i].get_attribute('innerHTML'))
+        E_optchange(items,prices,row)
+
+#以名稱搜尋==========================================================
+def NAME_srch(NAME,row):#row:0-4
+    #切換到A廠==================================================
+    driver.switch_to.window(handles[0])
+    srch = driver.find_element_by_id('cphContent_ucCT_txtKeyword')
+    srch.send_keys(NAME)
+    srch_btn = driver.find_element_by_id('cphContent_ucCT_btnSearch')
+    srch_btn.click()
+    srch = driver.find_element_by_id('cphContent_ucCT_txtKeyword')
+    srch.clear()
+    time.sleep(0.3)
+    A_item=driver.find_elements_by_xpath('//*[@id="cphContent_ucCT_gv"]/tbody/tr/td[4]')
+    A_price=driver.find_elements_by_xpath('//*[@id="cphContent_ucCT_gv"]/tbody/tr/td[6]')
+    #初始化項目陣列==============================================
+    items=[]
+    prices=[]
+    if len(A_item)>1:
+        for i in range(1,len(A_item)):
+            items.append(A_item[i].get_attribute('innerHTML'))
+            price=A_price[i].get_attribute('innerHTML')
+            price=re.sub('\.00','',price)
+            prices.append(price)
+        A_optchange(items,prices,row)
+    i=0
+    items=[]
+    prices=[]
+    #切換到E廠==================================================
+    driver.switch_to_window('tab2')
+    srch = driver.find_element_by_xpath('//*[@id="orderForm"]/ul/li[1]/span/input')
+    srch.send_keys(NAME)
     srch_btn = driver.find_element_by_xpath('//*[@id="orderForm"]/ul/li[4]/a')
     srch_btn.click()
     time.sleep(0.5)
@@ -257,28 +301,16 @@ def Dataprocess():
     E_P4.config(text='0')
     E_P5.config(text='0')
 
-
+#優先以健保碼搜尋
     for i in range(0,5):#0-4
         if df['健保碼'][i]!='':
             ID_srch(df['健保碼'][i],i)
         elif df['名稱'][i]!='':
-            print('line129',i)
-            df['A廠品項'][i]='名稱搜尋'
-            df['A品項價格'][i]='名稱搜尋'
-            df['E廠品項'][i]='名稱搜尋'
-            df['E品項價格'][i]='名稱搜尋'
+            NAME_srch(df['名稱'][i],i)
         else:
             continue
     print('line271')
     print(df)
-
-def optchanged(*args,row):
-    A_P1.config(text=A_dict[varA1.get()])
-    A_P2.config(text=A_dict[varA2.get()])
-    A_P3.config(text=A_dict[varA3.get()])
-    A_P4.config(text=A_dict[varA4.get()])
-    A_P5.config(text=A_dict[varA5.get()])
-
 
 #生成視窗元件==================================
 win=tk.Tk()
