@@ -5,6 +5,7 @@ import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import re
+import threading
 
 df=pd.DataFrame({'健保碼':['','','','',''],'名稱':['','','','',''],'A廠品項':['','','','',''],'A品項價格':['','','','',''],'E廠品項':['','','','',''],'E品項價格':['','','','',''],'業務1價':['','','','',''],'業務2價':['','','','',''],'業務3價':['','','','','']})
 A_dict={}
@@ -41,6 +42,7 @@ driver.find_element_by_xpath('/html/body/header/div[2]/div/div/div[1]/form/ul/li
 driver.find_element_by_id('urlogin_a').click()
 time.sleep(1.5)
 driver.find_element_by_class_name('order').click()
+
 
 #以ID搜尋========================================================
 def ID_srch(ID,row):#row:0-4
@@ -264,7 +266,7 @@ def Dataprocess():
     df['名稱'][3]=enNAME_4.get()
     df['名稱'][4]=enNAME_5.get()
 
-#查資料前初始化===============================
+    #查資料前初始化===============================
     varA1.set('')
     varA2.set('')
     varA3.set('')
@@ -301,7 +303,7 @@ def Dataprocess():
     E_P4.config(text='0')
     E_P5.config(text='0')
 
-#優先以健保碼搜尋
+    #優先以健保碼搜尋
     for i in range(0,5):#0-4
         if df['健保碼'][i]!='':
             ID_srch(df['健保碼'][i],i)
@@ -313,7 +315,26 @@ def Dataprocess():
     print(df)
 
 #生成視窗元件==================================
+    
+
+#倒數計時工具================================================
+def timeout():
+    timer=12
+    while True:
+        if timer>0:
+            time.sleep(1)
+            timer-=1
+            print(timer)
+        else:
+            timer=12
+            driver.switch_to.window(handles[0])
+            driver.refresh()
+            driver.switch_to_window('tab2')
+            driver.refresh()
+
+
 win=tk.Tk()
+win.title('查價程式')
 win.geometry('1500x300')
 
 lbID=tk.Label(win,text='健保碼',width=20).grid(row=0,column=0)
@@ -468,4 +489,14 @@ S3_5=tk.Entry(win,width=10).grid(column=8,row=5)
 
 btn=tk.Button(win,width=10,text='查詢',command=Dataprocess)
 btn.grid(column=8,row=6)
+#多線程設定===================================
+tList=[]
+
+t1=threading.Thread(target=lambda *args: win.mainloop())
+tList.append(t1)
+t2=threading.Thread(target=timeout)
+tList.append(t2)
+
+for t in tList:
+    t.start()
 win.mainloop()
