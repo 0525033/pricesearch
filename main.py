@@ -319,14 +319,16 @@ def Dataprocess():
 
 #倒數計時工具================================================
 def timeout():
-    timer=12
+    timer=1200
     while True:
         if timer>0:
             time.sleep(1)
             timer-=1
+            countdown.config(text='A、E網站將於'+str(timer)+'秒後重新整理')
             print(timer)
         else:
-            timer=12
+            countdown.config(text='重新整理中，請稍後...')
+            timer=1200
             driver.switch_to.window(handles[0])
             driver.refresh()
             driver.switch_to_window('tab2')
@@ -487,13 +489,16 @@ S3_3=tk.Entry(win,width=10).grid(column=8,row=3)
 S3_4=tk.Entry(win,width=10).grid(column=8,row=4)
 S3_5=tk.Entry(win,width=10).grid(column=8,row=5)
 
+countdown=tk.Label(win,text='')
+countdown.grid(column=6,row=6,columnspan=2)
+
 btn=tk.Button(win,width=10,text='查詢',command=Dataprocess)
 btn.grid(column=8,row=6)
 #多線程設定===================================
 tList=[]
 
-t1=threading.Thread(target=lambda *args: win.mainloop())
-tList.append(t1)
+# t1=threading.Thread(target=lambda *args: win.mainloop())
+# tList.append(t1)
 t2=threading.Thread(target=timeout)
 tList.append(t2)
 
