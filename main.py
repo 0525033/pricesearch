@@ -15,7 +15,7 @@ E_dict={}
 chrome_options=Options()
 chrome_options.add_argument('--headless')
 driver = webdriver.Chrome(chrome_options=chrome_options)
-driver = webdriver.Chrome()
+# driver = webdriver.Chrome()
 
 driver.get('http://ec.k-e.com.tw/LoginView.aspx')
 handles = driver.window_handles
@@ -52,9 +52,9 @@ def ID_srch(ID,row):#row:0-4
     srch.send_keys(ID)
     srch_btn = driver.find_element_by_id('cphContent_ucCT_btnSearch')
     srch_btn.click()
+    time.sleep(0.5)
     srch = driver.find_element_by_id('cphContent_ucCT_txtKeyword')
     srch.clear()
-    time.sleep(0.3)
     A_item=driver.find_elements_by_xpath('//*[@id="cphContent_ucCT_gv"]/tbody/tr/td[4]')
     A_price=driver.find_elements_by_xpath('//*[@id="cphContent_ucCT_gv"]/tbody/tr/td[6]')
     A_status=driver.find_elements_by_xpath('//*[@id="cphContent_ucCT_gv"]/tbody/tr/td[2]')
@@ -62,11 +62,11 @@ def ID_srch(ID,row):#row:0-4
     items=[]
     prices=[]
     status=[]
-    A_dict={}
     if len(A_item)>1:
         for i in range(1,len(A_item)):
-            print('line67')
-            items.append(A_item[i].get_attribute('innerHTML'))
+            itemName=A_item[i].get_attribute('innerHTML')
+            itemName=re.sub('<br>.*','',itemName)
+            items.append(itemName)
             price=A_price[i].get_attribute('innerHTML')
             price=re.sub('\.00','',price)
             prices.append(price)
@@ -75,26 +75,25 @@ def ID_srch(ID,row):#row:0-4
             item['price']=prices[i-1]
             item['status']=status[i-1]
             A_dict[items[i-1]]=item
-        print('line78',A_dict.keys())
-        A_optchange(A_dict,row)
+        A_optchange(A_dict,items,row)
     i=0
     items=[]
     prices=[]
     status=[]
-    E_dict={}
     #切換到E廠==================================================
     driver.switch_to_window('tab2')
     srch = driver.find_element_by_xpath('//*[@id="orderForm"]/ul/li[2]/span/input')
     srch.send_keys(ID)
     srch_btn = driver.find_element_by_xpath('//*[@id="orderForm"]/ul/li[4]/a')
     srch_btn.click()
-    time.sleep(0.5)
+    time.sleep(0.7)
     E_item=driver.find_elements_by_css_selector('.item .name a')
     E_price=driver.find_elements_by_css_selector('.item .sell_price span')
     E_status=driver.find_elements_by_css_selector('.item .status')
     if len(E_item)>0:
         for i in range(0,len(E_item)):
-            items.append(E_item[i].get_attribute('innerHTML'))
+            itemName=E_item[i].get_attribute('innerHTML')
+            items.append(itemName)
             prices.append(E_price[i].get_attribute('innerHTML'))
             status.append(E_status[i].get_attribute('innerHTML'))
             item={}
@@ -102,8 +101,7 @@ def ID_srch(ID,row):#row:0-4
             item['status']=status[i]
             E_dict[items[i]]=item
         #E_dict['實驗項目']=E_dict.pop(items[0])
-        print('line96',E_dict)
-        E_optchange(E_dict,row)
+        E_optchange(E_dict,items,row)
 
 #以名稱搜尋==========================================================
 def NAME_srch(NAME,row):#row:0-4
@@ -118,19 +116,29 @@ def NAME_srch(NAME,row):#row:0-4
     time.sleep(0.3)
     A_item=driver.find_elements_by_xpath('//*[@id="cphContent_ucCT_gv"]/tbody/tr/td[4]')
     A_price=driver.find_elements_by_xpath('//*[@id="cphContent_ucCT_gv"]/tbody/tr/td[6]')
+    A_status=driver.find_elements_by_xpath('//*[@id="cphContent_ucCT_gv"]/tbody/tr/td[2]')
     #初始化項目陣列==============================================
     items=[]
     prices=[]
+    status=[]
     if len(A_item)>1:
         for i in range(1,len(A_item)):
-            items.append(A_item[i].get_attribute('innerHTML'))
+            itemName=A_item[i].get_attribute('innerHTML')
+            itemName=re.sub('<br>.*','',itemName)
+            items.append(itemName)
             price=A_price[i].get_attribute('innerHTML')
             price=re.sub('\.00','',price)
             prices.append(price)
-        A_optchange(items,prices,row)
+            status.append(A_status[i].get_attribute('innerHTML'))
+            item={}
+            item['price']=prices[i-1]
+            item['status']=status[i-1]
+            A_dict[items[i-1]]=item
+        A_optchange(A_dict,items,row)
     i=0
     items=[]
     prices=[]
+    status=[]
     #切換到E廠==================================================
     driver.switch_to_window('tab2')
     srch = driver.find_element_by_xpath('//*[@id="orderForm"]/ul/li[1]/span/input')
@@ -140,96 +148,97 @@ def NAME_srch(NAME,row):#row:0-4
     time.sleep(0.5)
     E_item=driver.find_elements_by_css_selector('.item .name a')
     E_price=driver.find_elements_by_css_selector('.item .sell_price span')
+    E_status=driver.find_elements_by_css_selector('.item .status')
     if len(E_item)>0:
         for i in range(0,len(E_item)):
-            items.append(E_item[i].get_attribute('innerHTML'))
+            itemName=E_item[i].get_attribute('innerHTML')
+            items.append(itemName)
             prices.append(E_price[i].get_attribute('innerHTML'))
-        E_optchange(items,prices,row)
+            status.append(E_status[i].get_attribute('innerHTML'))
+            item={}
+            item['price']=prices[i]
+            item['status']=status[i]
+            E_dict[items[i]]=item
+        #E_dict['實驗項目']=E_dict.pop(items[0])
+        E_optchange(E_dict,items,row)
 
-def A_optchange(A_dict,row):
+def A_optchange(A_dict,itemList,row):
+    print('line150',len(A_dict.keys()))
     if row==0:
         menu = A_N1["menu"]
         menu.delete(0, "end")
         A_li1=[]
-        for string in A_dict.keys():
-            cleaned=re.sub('<br>.*','',string)
-            A_li1.append(cleaned)
+        dict_string=list(A_dict.keys())
+        for string in itemList:
+            A_li1.append(string)
             varA1.set(A_li1[0])
-            A_dict[cleaned]=A_dict.pop(string)
-            print('line158',cleaned)
-            menu.add_command(label=cleaned, command=tk._setit(varA1, cleaned))
+            menu.add_command(label=string, command=tk._setit(varA1, string))
         item=A_dict[varA1.get()]
         A_P1.config(text=item['price'])
     elif row==1:
         menu = A_N2["menu"]
         menu.delete(0, "end")
         A_li2=[]
-        for string in A_dict.keys():
-            cleaned=re.sub('<br>.*','',string)
-            A_li2.append(cleaned)
+        dict_string=list(A_dict.keys())
+        for string in itemList:
+            A_li2.append(string)
             varA2.set(A_li2[0])
-            A_dict[cleaned]=A_dict.pop(string)
-            menu.add_command(label=cleaned, command=tk._setit(varA2, cleaned))
+            menu.add_command(label=string, command=tk._setit(varA2, string))
         item=A_dict[varA2.get()]
         A_P2.config(text=item['price'])
     elif row==2:
         menu = A_N3["menu"]
         menu.delete(0, "end")
         A_li3=[]
-        for string in A_dict.keys():
-            cleaned=re.sub('<br>.*','',string)
-            A_li3.append(cleaned)
+        dict_string=list(A_dict.keys())
+        for string in itemList:
+            A_li3.append(string)
             varA3.set(A_li3[0])
-            A_dict[cleaned]=A_dict.pop(string)
-            menu.add_command(label=cleaned, command=tk._setit(varA3, cleaned))
+            menu.add_command(label=string, command=tk._setit(varA3, string))
         item=A_dict[varA3.get()]
         A_P3.config(text=item['price'])
     elif row==3:
         menu = A_N4["menu"]
         menu.delete(0, "end")
         A_li4=[]
-        for string in A_dict.keys():
-            cleaned=re.sub('<br>.*','',string)
-            A_li4.append(cleaned)
+        dict_string=list(A_dict.keys())
+        for string in itemList:
+            A_li4.append(string)
             varA4.set(A_li4[0])
-            A_dict[cleaned]=A_dict.pop(string)
-            menu.add_command(label=cleaned, command=tk._setit(varA4, cleaned))
+            menu.add_command(label=string, command=tk._setit(varA4, string))
         item=A_dict[varA4.get()]
         A_P4.config(text=item['price'])
     elif row==4:
         menu = A_N5["menu"]
         menu.delete(0, "end")
         A_li5=[]
-        for string in A_dict.keys():
-            cleaned=re.sub('<br>.*','',string)
-            A_li5.append(cleaned)
+        dict_string=list(A_dict.keys())
+        for string in itemList:
+            A_li5.append(string)
             varA5.set(A_li5[0])
-            A_dict[cleaned]=A_dict.pop(string)
-            menu.add_command(label=cleaned, command=tk._setit(varA5, cleaned))
+            menu.add_command(label=string, command=tk._setit(varA5, string))
         item=A_dict[varA5.get()]
         A_P5.config(text=item['price'])
 
-def E_optchange(E_dict,row):
+def E_optchange(E_dict,itemList,row):
     if row==0:
         menu = E_N1["menu"]
         menu.delete(0, "end")
         E_li1=[]
-        for string in E_dict.keys():
-            cleaned=re.sub('<br>.*','',string)
-            E_li1.append(cleaned)
+        for string in itemList:
+            E_li1.append(string)
             varE1.set(E_li1[0])
-            menu.add_command(label=cleaned, command=tk._setit(varE1, cleaned))
+            menu.add_command(label=string, command=tk._setit(varE1, string))
         item=E_dict[varE1.get()]
         E_P1.config(text=item['price'])
     elif row==1:
         menu = E_N2["menu"]
         menu.delete(0, "end")
         E_li2=[]
-        for string in E_dict.keys():
-            cleaned=re.sub('<br>.*','',string)
-            E_li2.append(cleaned)
+        for string in itemList:
+            E_li2.append(string)
             varE2.set(E_li2[0])
-            menu.add_command(label=cleaned, command=tk._setit(varE2, cleaned))
+            menu.add_command(label=string, command=tk._setit(varE2, string))
         item=E_dict[varE2.get()]
         E_P2.config(text=item['price'])
 
@@ -237,11 +246,10 @@ def E_optchange(E_dict,row):
         menu = E_N3["menu"]
         menu.delete(0, "end")
         E_li3=[]
-        for string in E_dict.keys():
-            cleaned=re.sub('<br>.*','',string)
-            E_li3.append(cleaned)
+        for string in itemList:
+            E_li3.append(string)
             varE3.set(E_li3[0])
-            menu.add_command(label=cleaned, command=tk._setit(varE3, cleaned))
+            menu.add_command(label=string, command=tk._setit(varE3, string))
         item=E_dict[varE3.get()]
         E_P3.config(text=item['price'])
 
@@ -249,11 +257,10 @@ def E_optchange(E_dict,row):
         menu = E_N4["menu"]
         menu.delete(0, "end")
         E_li4=[]
-        for string in E_dict.keys():
-            cleaned=re.sub('<br>.*','',string)
-            E_li4.append(cleaned)
+        for string in itemList:
+            E_li4.append(string)
             varE4.set(E_li4[0])
-            menu.add_command(label=cleaned, command=tk._setit(varE4, cleaned))
+            menu.add_command(label=string, command=tk._setit(varE4, string))
         item=E_dict[varE4.get()]
         E_P4.config(text=item['price'])
 
@@ -261,11 +268,10 @@ def E_optchange(E_dict,row):
         menu = E_N5["menu"]
         menu.delete(0, "end")
         E_li5=[]
-        for string in E_dict.keys():
-            cleaned=re.sub('<br>.*','',string)
-            E_li5.append(cleaned)
+        for string in itemList:
+            E_li5.append(string)
             varE5.set(E_li5[0])
-            menu.add_command(label=cleaned, command=tk._setit(varE5, cleaned))
+            menu.add_command(label=string, command=tk._setit(varE5, string))
         item=E_dict[varE5.get()]
         E_P5.config(text=item['price'])
 
@@ -350,6 +356,7 @@ def A_update(A_P,A_S,varA):
     A_S.config(text=status)
 
 def E_update(E_P,E_S,varE):
+    print('line360',E_dict)
     item=E_dict[varE.get()]
     price=item['price']
     status=item['status']
@@ -379,17 +386,17 @@ win=tk.Tk()
 win.title('查價程式')
 win.geometry('1500x300')
 
-lbID=tk.Label(win,text='健保碼',width=20).grid(row=0,column=0)
-lbNAME=tk.Label(win,text='名稱',width=20).grid(row=0,column=1)
+lbID=tk.Label(win,text='健保碼',width=12).grid(row=0,column=0)
+lbNAME=tk.Label(win,text='名稱',width=12).grid(row=0,column=1)
 lbA_N=tk.Label(win,text='A廠品項',width=20).grid(row=0,column=2)
 lbA_P=tk.Label(win,text='A品項價格',width=10).grid(row=0,column=3)
 lbA_S=tk.Label(win,text='A品項庫存',width=10).grid(row=0,column=4)
 lbE_N=tk.Label(win,text='E廠品項',width=20).grid(row=0,column=5)
-lbE_P=tk.Label(win,text='E品項價格',width=20).grid(row=0,column=6)
+lbE_P=tk.Label(win,text='E品項價格',width=10).grid(row=0,column=6)
 lbE_S=tk.Label(win,text='E品項庫存',width=10).grid(row=0,column=7)
-lbS1=tk.Label(win,text='業務1價',width=10).grid(row=0,column=8)
-lbS2=tk.Label(win,text='業務2價',width=10).grid(row=0,column=9)
-lbS3=tk.Label(win,text='業務3價',width=10).grid(row=0,column=10)
+lbS1=tk.Label(win,text='業務1價',width=7).grid(row=0,column=8)
+lbS2=tk.Label(win,text='業務2價',width=7).grid(row=0,column=9)
+lbS3=tk.Label(win,text='業務3價',width=7).grid(row=0,column=10)
 
 
 
@@ -413,11 +420,11 @@ enID_4.grid(column=0,row=4)
 enID_5.grid(column=0,row=5)
 
 #名稱欄位========================================
-enNAME_1=tk.Entry(win,width=20)
-enNAME_2=tk.Entry(win,width=20)
-enNAME_3=tk.Entry(win,width=20)
-enNAME_4=tk.Entry(win,width=20)
-enNAME_5=tk.Entry(win,width=20)
+enNAME_1=tk.Entry(win,width=12)
+enNAME_2=tk.Entry(win,width=12)
+enNAME_3=tk.Entry(win,width=12)
+enNAME_4=tk.Entry(win,width=12)
+enNAME_5=tk.Entry(win,width=12)
 
 enNAME_1.grid(column=1,row=1)
 enNAME_2.grid(column=1,row=2)
@@ -463,7 +470,7 @@ A_P3.grid(column=3,row=3)
 A_P4.grid(column=3,row=4)
 A_P5.grid(column=3,row=5)
 
-#A項目供貨狀況===========================================
+#A項目庫存===========================================
 A_S1=tk.Label(win,text='-')
 A_S2=tk.Label(win,text='-')
 A_S3=tk.Label(win,text='-')
@@ -541,29 +548,29 @@ varE4.trace('w',lambda *args:E_update(E_P4,E_S4,varE4))
 varE5.trace('w',lambda *args:E_update(E_P5,E_S5,varE5))
 
 #業務報價===============================================
-S1_1=tk.Entry(win,width=10).grid(column=8,row=1)
-S1_2=tk.Entry(win,width=10).grid(column=8,row=2)
-S1_3=tk.Entry(win,width=10).grid(column=8,row=3)
-S1_4=tk.Entry(win,width=10).grid(column=8,row=4)
-S1_5=tk.Entry(win,width=10).grid(column=8,row=5)
+S1_1=tk.Entry(win,width=7).grid(column=8,row=1)
+S1_2=tk.Entry(win,width=7).grid(column=8,row=2)
+S1_3=tk.Entry(win,width=7).grid(column=8,row=3)
+S1_4=tk.Entry(win,width=7).grid(column=8,row=4)
+S1_5=tk.Entry(win,width=7).grid(column=8,row=5)
 
-S2_1=tk.Entry(win,width=10).grid(column=9,row=1)
-S2_2=tk.Entry(win,width=10).grid(column=9,row=2)
-S2_3=tk.Entry(win,width=10).grid(column=9,row=3)
-S2_4=tk.Entry(win,width=10).grid(column=9,row=4)
-S2_5=tk.Entry(win,width=10).grid(column=9,row=5)
+S2_1=tk.Entry(win,width=7).grid(column=9,row=1)
+S2_2=tk.Entry(win,width=7).grid(column=9,row=2)
+S2_3=tk.Entry(win,width=7).grid(column=9,row=3)
+S2_4=tk.Entry(win,width=7).grid(column=9,row=4)
+S2_5=tk.Entry(win,width=7).grid(column=9,row=5)
 
-S3_1=tk.Entry(win,width=10).grid(column=10,row=1)
-S3_2=tk.Entry(win,width=10).grid(column=10,row=2)
-S3_3=tk.Entry(win,width=10).grid(column=10,row=3)
-S3_4=tk.Entry(win,width=10).grid(column=10,row=4)
-S3_5=tk.Entry(win,width=10).grid(column=10,row=5)
+S3_1=tk.Entry(win,width=7).grid(column=10,row=1)
+S3_2=tk.Entry(win,width=7).grid(column=10,row=2)
+S3_3=tk.Entry(win,width=7).grid(column=10,row=3)
+S3_4=tk.Entry(win,width=7).grid(column=10,row=4)
+S3_5=tk.Entry(win,width=7).grid(column=10,row=5)
 
 countdown=tk.Label(win,text='')
 countdown.grid(column=6,row=6,columnspan=2)
 
 btn=tk.Button(win,width=10,text='查詢',command=Dataprocess)
-btn.grid(column=8,row=6)
+btn.grid(column=9,row=6,columnspan=2)
 
 
 
