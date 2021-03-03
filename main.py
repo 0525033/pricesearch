@@ -6,6 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import re
 import threading
+import sys
 
 df=pd.DataFrame({'健保碼':['','','','',''],'名稱':['','','','',''],'A廠品項':['','','','',''],'A品項價格':['','','','',''],'E廠品項':['','','','',''],'E品項價格':['','','','',''],'業務1價':['','','','',''],'業務2價':['','','','',''],'業務3價':['','','','','']})
 A_dict={}
@@ -37,8 +38,8 @@ driver.switch_to_window('tab2')
 driver.get('http://www.chahwa.com.tw/index.php')
 driver.find_element_by_xpath('//*[@id="index"]/nav/ul/li[4]').click()
 time.sleep(1)
-driver.find_element_by_xpath('//*[@id="primptmsg"]/div/div[1]/form/ul/li[1]/span/input').send_keys('fkg20131101')
-driver.find_element_by_xpath('/html/body/header/div[2]/div/div/div[1]/form/ul/li[2]/span/input').send_keys('fkg9988')
+driver.find_element_by_xpath('//*[@id="primptmsg"]/div/div[1]/form/ul/li[1]/span/input').send_keys('fortune77')
+driver.find_element_by_xpath('/html/body/header/div[2]/div/div/div[1]/form/ul/li[2]/span/input').send_keys('fortune22477301')
 driver.find_element_by_id('urlogin_a').click()
 time.sleep(1.5)
 driver.find_element_by_class_name('order').click()
@@ -102,6 +103,7 @@ def ID_srch(ID,row):#row:0-4
             E_dict[items[i]]=item
         #E_dict['實驗項目']=E_dict.pop(items[0])
         E_optchange(E_dict,items,row)
+    btn.config(state=tk.NORMAL)
 
 #以名稱搜尋==========================================================
 def NAME_srch(NAME,row):#row:0-4
@@ -161,6 +163,7 @@ def NAME_srch(NAME,row):#row:0-4
             E_dict[items[i]]=item
         #E_dict['實驗項目']=E_dict.pop(items[0])
         E_optchange(E_dict,items,row)
+    btn.config(state=tk.NORMAL)
 
 def A_optchange(A_dict,itemList,row):
     if row==0:
@@ -275,6 +278,8 @@ def E_optchange(E_dict,itemList,row):
         E_P5.config(text=item['price'])
 
 def Dataprocess():
+    btn.config(state=tk.DISABLED)
+    win.update()
     df['健保碼'][0]=enID_1.get()
     df['健保碼'][1]=enID_2.get()
     df['健保碼'][2]=enID_3.get()
@@ -376,6 +381,13 @@ def timeout():
             driver.switch_to_window('tab2')
             driver.refresh()
 
+#關閉視窗事件==================================================
+def on_closing():
+    driver.quit()
+    win.destroy()
+    sys.exit()
+
+
 
 win=tk.Tk()
 win.title('查價程式')
@@ -389,9 +401,6 @@ lbA_S=tk.Label(win,text='A品項庫存',width=10).grid(row=0,column=4)
 lbE_N=tk.Label(win,text='E廠品項',width=20).grid(row=0,column=5)
 lbE_P=tk.Label(win,text='E品項價格',width=10).grid(row=0,column=6)
 lbE_S=tk.Label(win,text='E品項庫存',width=10).grid(row=0,column=7)
-lbS1=tk.Label(win,text='業務1價',width=7).grid(row=0,column=8)
-lbS2=tk.Label(win,text='業務2價',width=7).grid(row=0,column=9)
-lbS3=tk.Label(win,text='業務3價',width=7).grid(row=0,column=10)
 
 
 
@@ -543,30 +552,14 @@ varE4.trace('w',lambda *args:E_update(E_P4,E_S4,varE4))
 varE5.trace('w',lambda *args:E_update(E_P5,E_S5,varE5))
 
 #業務報價===============================================
-S1_1=tk.Entry(win,width=7).grid(column=8,row=1)
-S1_2=tk.Entry(win,width=7).grid(column=8,row=2)
-S1_3=tk.Entry(win,width=7).grid(column=8,row=3)
-S1_4=tk.Entry(win,width=7).grid(column=8,row=4)
-S1_5=tk.Entry(win,width=7).grid(column=8,row=5)
-
-S2_1=tk.Entry(win,width=7).grid(column=9,row=1)
-S2_2=tk.Entry(win,width=7).grid(column=9,row=2)
-S2_3=tk.Entry(win,width=7).grid(column=9,row=3)
-S2_4=tk.Entry(win,width=7).grid(column=9,row=4)
-S2_5=tk.Entry(win,width=7).grid(column=9,row=5)
-
-S3_1=tk.Entry(win,width=7).grid(column=10,row=1)
-S3_2=tk.Entry(win,width=7).grid(column=10,row=2)
-S3_3=tk.Entry(win,width=7).grid(column=10,row=3)
-S3_4=tk.Entry(win,width=7).grid(column=10,row=4)
-S3_5=tk.Entry(win,width=7).grid(column=10,row=5)
 
 countdown=tk.Label(win,text='')
-countdown.grid(column=6,row=6,columnspan=2)
+countdown.grid(column=4,row=6,columnspan=2)
 
 btn=tk.Button(win,width=10,text='查詢',command=Dataprocess)
-btn.grid(column=9,row=6,columnspan=2)
-
+win.bind('<Return>',lambda *args:Dataprocess())
+btn.grid(column=6,row=6,columnspan=2)
+win.protocol("WM_DELETE_WINDOW", on_closing)
 
 
 #多線程設定===================================
@@ -577,4 +570,6 @@ tList.append(t2)
 
 for t in tList:
     t.start()
+
+
 win.mainloop()
