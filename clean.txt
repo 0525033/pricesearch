@@ -1,0 +1,1 @@
+body > div.inner.boundary > main > div > div > div > div.ds.search-result.table > div.content > ul > li > div > div.stock > span
