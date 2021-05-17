@@ -6,7 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import re
 import threading
-import sys
+import os
 
 df=pd.DataFrame({'健保碼':['','','','',''],'名稱':['','','','',''],'A廠品項':['','','','',''],'A品項價格':['','','','',''],'E廠品項':['','','','',''],'E品項價格':['','','','',''],'業務1價':['','','','',''],'業務2價':['','','','',''],'業務3價':['','','','','']})
 A_dict={}
@@ -17,14 +17,17 @@ D_dict={}
 chrome_options=Options()
 chrome_options.add_argument('--headless')
 driver = webdriver.Chrome(chrome_options=chrome_options)
-driver = webdriver.Chrome()
+# driver = webdriver.Chrome()
 
 driver.get('http://ec.k-e.com.tw/LoginView.aspx')
 handles = driver.window_handles
 driver.switch_to.window(handles[0])
 handle1 = driver.current_window_handle
-alert = driver.switch_to_alert()
-alert.accept()
+try:
+    alert = driver.switch_to_alert()
+    alert.accept()
+except:
+    pass
 account_input = driver.find_element_by_id('cphContent_txtAccount').send_keys('0401609')
 pass_input = driver.find_element_by_id('cphContent_txtPassword').send_keys('ysp0613')
 login_btn = driver.find_element_by_id('cphContent_btnLogin').click()
@@ -76,7 +79,7 @@ driver.get('https://www.dashengha.com.tw/order.php?act=order')
 
 #以ID搜尋========================================================
 def ID_srch(ID,row):#row:0-4
-    print(ID,row)
+    # print(ID,row)
     #切換到A廠==================================================
     driver.switch_to.window(handles[0])
     srch = driver.find_element_by_id('cphContent_ucCT_txtKeyword')
@@ -155,10 +158,11 @@ def ID_srch(ID,row):#row:0-4
             srch=driver.find_element_by_css_selector('form > div.fields > div:nth-child(2) > input')
             break
         except:
-            print('找不到srchbox')
+            # print('找不到srchbox')
             continue
     srch.send_keys(ID)
     srch_btn = driver.find_element_by_css_selector('form > div.button.field > button')
+    # print('srchclick')
     srch_btn.click()
     while True:
         try:
@@ -166,12 +170,12 @@ def ID_srch(ID,row):#row:0-4
             if(srched=='   健保碼含 '+ID+'   '):
                 break
         except:
-            print('尋找大勝tag')
             continue
     srch.clear()
     D_item=driver.find_elements_by_css_selector('.product-name h3')
     D_price=driver.find_elements_by_css_selector('span.price')
     D_status=driver.find_elements_by_css_selector('div.stock > span')
+    # print('item found')
     if(len(D_item)>0):
         for i in range(0,len(D_item)):
             items.append(D_item[i].get_attribute('innerHTML'))
@@ -181,7 +185,10 @@ def ID_srch(ID,row):#row:0-4
             item['price']=prices[i]
             item['status']=status[i]
             D_dict[items[i]]=item
-        D_optchange(D_dict,items,row)
+            # print('dataprocessed')
+            D_optchange(D_dict,items,row)
+        
+        # print('optchngd')
 
 
 #以名稱搜尋==========================================================
@@ -226,7 +233,13 @@ def NAME_srch(NAME,row):#row:0-4
     srch.send_keys(NAME)
     srch_btn = driver.find_element_by_xpath('//*[@id="orderForm"]/ul/li[4]/a')
     srch_btn.click()
-    time.sleep(0.5)
+    while True:
+        try:
+            keyword=driver.find_element_by_xpath('//*[@id="page"]/div[6]/div[2]/div/div[1]/div[2]/p/b').get_attribute('innerHTML')
+            if(keyword==NAME):
+                break
+        except:
+            continue
     E_item=driver.find_elements_by_css_selector('.item .name a')
     E_price=driver.find_elements_by_css_selector('.item .sell_price span')
     E_status=driver.find_elements_by_css_selector('.item .status')
@@ -242,7 +255,51 @@ def NAME_srch(NAME,row):#row:0-4
             E_dict[items[i]]=item
         #E_dict['實驗項目']=E_dict.pop(items[0])
         E_optchange(E_dict,items,row)
+    i=0
+    items=[]
+    prices=[]
+    status=[]
     btn.config(state=tk.NORMAL)
+
+    #切換到大勝==================================================
+    driver.switch_to_window('tab3')
+    while True:
+        try:
+            srch=driver.find_element_by_css_selector('form > div.fields > div:nth-child(1) > input[type=text]')
+            break
+        except:
+            continue
+    srch.send_keys(NAME)
+    srch_btn = driver.find_element_by_css_selector('form > div.button.field > button')
+    # print('srchclick')
+    srch_btn.click()
+    while True:
+        try:
+            srched=driver.find_element_by_xpath('/html/body/div[1]/main/div/div/div/div[2]/div[1]/span/b').get_attribute('innerHTML')
+            if(srched==' 品名含 '+NAME+'     '):  
+                break
+        except:
+            # print('尋找大勝tag')
+            continue
+    srch.clear()
+    D_item=driver.find_elements_by_css_selector('.product-name h3')
+    D_price=driver.find_elements_by_css_selector('span.price')
+    D_status=driver.find_elements_by_css_selector('div.stock > span')
+    # print('item found')
+    if(len(D_item)>0):
+        for i in range(0,len(D_item)):
+            items.append(D_item[i].get_attribute('innerHTML'))
+            prices.append(D_price[i].get_attribute('innerHTML'))
+            status.append(D_status[i].get_attribute('innerHTML'))
+            item={}
+            item['price']=prices[i]
+            item['status']=status[i]
+            D_dict[items[i]]=item
+            # print('dataprocessed')
+            D_optchange(D_dict,items,row)
+        
+        # print('optchngd')
+
 
 def A_optchange(A_dict,itemList,row):
     if row==0:
@@ -357,7 +414,7 @@ def E_optchange(E_dict,itemList,row):
         E_P5.config(text=item['price'])
 
 def D_optchange(D_dict,itemList,row):
-    print(D_dict,itemList,row)
+    # print(D_dict,itemList,row)
     if row==0:
         menu = D_N1["menu"]
         menu.delete(0, "end")
@@ -503,13 +560,10 @@ def Dataprocess():
     #優先以健保碼搜尋
     for i in range(0,5):#0-4
         if df['健保碼'][i]!='':
-            print('ID_srch')
             ID_srch(df['健保碼'][i],i)
         elif df['名稱'][i]!='':
-            print('NAME_srch')
             NAME_srch(df['名稱'][i],i)
         else:
-            print('NEXT')
             continue
 def A_update(A_P,A_S,varA):
     item=A_dict[varA.get()]
@@ -556,7 +610,7 @@ def timeout():
 def on_closing():
     driver.quit()
     win.destroy()
-    sys.exit()
+    os._exit(0)
 
 
 
