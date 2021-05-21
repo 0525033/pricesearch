@@ -17,7 +17,7 @@ D_dict={}
 chrome_options=Options()
 chrome_options.add_argument('--headless')
 driver = webdriver.Chrome(chrome_options=chrome_options)
-# driver = webdriver.Chrome()
+driver = webdriver.Chrome()
 
 driver.get('http://ec.k-e.com.tw/LoginView.aspx')
 handles = driver.window_handles
@@ -79,6 +79,7 @@ driver.get('https://www.dashengha.com.tw/order.php?act=order')
 
 #以ID搜尋========================================================
 def ID_srch(ID,row):#row:0-4
+    ID=ID.strip()
     # print(ID,row)
     #切換到A廠==================================================
     driver.switch_to.window(handles[0])
@@ -130,6 +131,7 @@ def ID_srch(ID,row):#row:0-4
             if(keyword==ID):
                 break
         except:
+            print('關鍵字不同=>E')
             continue
     E_item=driver.find_elements_by_css_selector('.item .name a')
     E_price=driver.find_elements_by_css_selector('.item .sell_price span')
@@ -158,7 +160,7 @@ def ID_srch(ID,row):#row:0-4
             srch=driver.find_element_by_css_selector('form > div.fields > div:nth-child(2) > input')
             break
         except:
-            # print('找不到srchbox')
+            print('找不到srchbox')
             continue
     srch.send_keys(ID)
     srch_btn = driver.find_element_by_css_selector('form > div.button.field > button')
